@@ -19,6 +19,7 @@ include <../23340BBA7B_Spool Rod Nut/23340BBA7B_Spool Rod Nut.scad>
 include <../23340BBA10_Handle/23340BBA10_Handle.scad>
 include <../23355BBA6A_Spool Gear Rightward/23355BBA6A_Spool Gear Rightward.scad>
 include <../23355BBA6B_Spool Core Rightward/23355BBA6B_Spool Core Rightward.scad>
+include <../23355BBA6C_Spool End Cap Removable/23355BBA6C_Spool End Cap Removable.scad>
 
 /* [Model Selections] */
 frame_options = "F"; // [F:V-Slot 2020 Extrusion]
@@ -29,7 +30,7 @@ control_board_options = "C"; // [C:MKS Robin Nano V3.x, R:RAMPS(TODO)]
 filament_gripper_mesh = "../23340BBA01_Filament Gripper/23340BBA01_Filament Gripper.stl";
 
 /* [Visibility] */
-hide_tags ="frame 23269BBA03 power_supply 23345BBA01 23329BBA02";
+hide_tags ="frame 23269BBA03 power_supply 23345BBA01 23329BBA02 23340BBA10 23329BBA01";
 //hide_tags = "frame power_supply "; 
 //hide_tags = "23329BBA01 23345BBA01";
 //hide_tags = "23345BBA01 23329BBA02";
@@ -198,7 +199,7 @@ hide(hide_tags) color_this("DimGray") frame()
         23340BBA5C_doublegear48t(anchor=BOTTOM);
     } 
     // spool rod on spool&gear holder
-    attach("spool") color_this("SeaGreen") up((slot_width+shg_thickness)/2) 
+    attach("spool") color_this("DarkSalmon") up((slot_width+shg_thickness)/2) 
       23320BBA7A_spool_rod() {
       // nuts on spool rod
       attach(BOTTOM, "ceiling") color_this("CadetBlue") tag("23340BBA7B") 23340BBA7B_spool_rod_nut();
@@ -208,7 +209,11 @@ hide(hide_tags) color_this("DimGray") frame()
         23355BBA6A_spool_gear_rightward() {
         // spool core on spool gear
         attach("face", BOTTOM) color_this("Beige") tag("23355BBA6B") 
-          23355BBA6B_spool_core_rightward();
+          23355BBA6B_spool_core_rightward() {
+            // spool cap on spool core
+          attach(TOP, "face") color_this("CadetBlue") tag("23355BBA6C") 
+            23355BBA6C_spool_end_cap_removable();
+        }
       }
     }
   }
