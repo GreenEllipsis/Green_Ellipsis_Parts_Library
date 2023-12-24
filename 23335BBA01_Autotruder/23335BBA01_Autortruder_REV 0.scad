@@ -18,8 +18,9 @@ include <../23320BBA7A_Spool Rod/23320BBA7A_Spool Rod.scad>
 include <../23340BBA7B_Spool Rod Nut/23340BBA7B_Spool Rod Nut.scad>
 include <../23340BBA10_Handle/23340BBA10_Handle.scad>
 include <../23355BBA6A_Spool Gear Rightward/23355BBA6A_Spool Gear Rightward.scad>
-include <../23355BBA6B_Spool Core Rightward/23355BBA6B_Spool Core Rightward.scad>
+include <../23355BBA6B_Spool Core/23355BBA6B_Spool Core.scad>
 include <../23355BBA6C_Spool End Cap Removable/23355BBA6C_Spool End Cap Removable.scad>
+include <../23340BBA7D_Spool Rod Spacer/23340BBA7D_Spool Rod Spacer.scad>
 
 /* [Model Selections] */
 frame_options = "F"; // [F:V-Slot 2020 Extrusion]
@@ -197,26 +198,31 @@ hide(hide_tags) color_this("DimGray") frame()
       // TODO double gear on bearing
       attach(TOP) color_this("CadetBlue") 
         23340BBA5C_doublegear48t(anchor=BOTTOM);
-    } 
+    } // gantry_wheel_2020
+    // spool rod spacer on gear holder
+    attach("spool", TOP) color_this("D") tag("23340BBA7D")
+      up(8) 23340BBA7D_spool_rod_spacer() {
+      // spool gear on spool spacer
+      attach(BOTTOM, BOTTOM) color_this("CadetBlue") tag("23355BBA6A") 
+        23355BBA6A_spool_gear_rightward() {
+        // spool core on spool gear
+        attach("face", BOTTOM) color_this("Beige") tag("23355BBA6B") 
+          23355BBA6B_spool_core() {
+            // spool cap on spool core
+          attach(TOP, "face") color_this("CadetBlue") tag("23355BBA6C") 
+            23355BBA6C_spool_end_cap_removable();
+        } // spool_core
+      } // spool_gear
+    } // rod_spacer
     // spool rod on spool&gear holder
     attach("spool") color_this("DarkSalmon") up((slot_width+shg_thickness)/2) 
       23320BBA7A_spool_rod() {
       // nuts on spool rod
-      attach(BOTTOM, "ceiling") color_this("CadetBlue") tag("23340BBA7B") 23340BBA7B_spool_rod_nut();
-      attach(TOP, "ceiling") color_this("CadetBlue") tag("23340BBA7B") 23340BBA7B_spool_rod_nut();
-      // spool gear on spool rod
-      attach(BOTTOM, TOP) color_this("CadetBlue") down(52) tag("23355BBA6A") 
-        23355BBA6A_spool_gear_rightward() {
-        // spool core on spool gear
-        attach("face", BOTTOM) color_this("Beige") tag("23355BBA6B") 
-          23355BBA6B_spool_core_rightward() {
-            // spool cap on spool core
-          attach(TOP, "face") color_this("CadetBlue") tag("23355BBA6C") 
-            23355BBA6C_spool_end_cap_removable();
-        }
-      }
-    }
-  }
+      attach(BOTTOM, "ceiling") color_this("CadetBlue") tag("23340BBA7B")
+        23340BBA7B_spool_rod_nut();
+        attach(TOP, "ceiling") color_this("CadetBlue") tag("23340BBA7B") 23340BBA7B_spool_rod_nut();
+    } // spool rod
+  } // spool and gear holder
 }
 
 // TESTS

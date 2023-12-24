@@ -1,8 +1,8 @@
 // a BOSL2 module
 include <../libs/BOSL2/std.scad>
 
-module 23355BBA6B_spool_core_rightward(anchor=CENTER, spin=0, orient=UP) {
-  file="../23355BBA6B_Spool Core Rightward/23355BBA6B_Spool Core Rightward.stl";
+module 23355BBA6B_spool_core(anchor=CENTER, spin=0, orient=UP) {
+  file="../23355BBA6B_Spool Core/23355BBA6B_Spool Core.stl";
   r=51/2;
   h=74.44;
 //  anchors=[
@@ -14,4 +14,4 @@ module 23355BBA6B_spool_core_rightward(anchor=CENTER, spin=0, orient=UP) {
   }
 }
 
-*23355BBA6B_spool_core_rightward() show_anchors();
+*23355BBA6B_spool_core() show_anchors();
