@@ -1,6 +1,7 @@
 // a BOSL2 module
 include <../libs/BOSL2/std.scad>
-
+$fs = $preview ? 5 : 2;
+$fa = $preview ? 12 : 5;
 module 23340BBA7D_spool_rod_spacer(anchor=CENTER, spin=0, orient=UP) {
   r=40/2;
   r2=34/2;
@@ -24,3 +25,4 @@ module 23340BBA7D_spool_rod_spacer(anchor=CENTER, spin=0, orient=UP) {
 }
 
 *23340BBA7D_spool_rod_spacer() show_anchors();
+*23340BBA7D_spool_rod_spacer(); // print version
