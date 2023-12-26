@@ -1,9 +1,13 @@
 // a BOSL2 module
 include <../libs/BOSL2/std.scad>
 
+function 23356BBA01_volcano_heater_block_dims() = [
+  [24, 20, 11.5], // size  
+];
+
 module 23356BBA01_volcano_heater_block(anchor=CENTER, spin=0, orient=UP) {
   file="../23356BBA01_Volcano Heater Block/23356BBA01_Volcano Heater Block.stl";
-  size = [24, 20, 11.5]; 
+  size = 23356BBA01_volcano_heater_block_dims()[0]; 
 anchors=[
     named_anchor("heater_front_hole",[-size.x/2+2.5, -size.y/2+15, size.z/2], TOP, 0),
     named_anchor("heater_back_hole",[-size.x/2+2.5, -size.y/2+5.5, size.z/2], TOP, 0),

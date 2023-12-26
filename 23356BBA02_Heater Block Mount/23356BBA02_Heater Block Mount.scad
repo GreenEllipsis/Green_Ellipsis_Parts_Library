@@ -1,23 +1,32 @@
 // creates a heater block mount for the Autotrude with an E3D Volcano Heater Block
-// TODO extend extrusion over the top of the block like a heat shield
+// TODO set height of nozzle to 21.6+51/2
+// TODO add anchors for mounting heater block mounting holes
 include <../libs/BOSL2/std.scad>
 include <../libs/BOSL2/extrusion_vslot.scad>
 include <../23356BBA01_Volcano Heater Block/23356BBA01_Volcano Heater Block.scad>
 
 
 module 23355BBA02_heater_block_mount(anchor, spin, orient) {
-  size = [20, 20, 40];
-  hb_size = [24, 20, 11.5]; // heater_block_size
+  /* [Rendering] */
+  preview_fa = 12;
+  preview_fs = 5;
+  render_fa = 10;
+  render_fs = 0.4;
+  $fa = $preview ? preview_fa : render_fa;
+  $fs = $preview ? preview_fs : render_fs;
+
+  size = [20, 20, 50];
+  hb_size = 23356BBA01_volcano_heater_block_dims()[0]; // heater_block_size
+  z_offset = 6;
 
   module shape() {
-    diff() {
+    render(convexity = 1) diff() {
       recolor("Green") extrusion_vslot(profile=size.x, height=size.z, anchor=CENTER) {
-        #tag("remove") position(TOP) cuboid([hb_size.x+4, hb_size.y+1, hb_size.z+.02], anchor=TOP+LEFT, spin=[180,90,0]);
-        #tag("remove") down(6) left(2) position(TOP) cuboid([hb_size.x-2, hb_size.y+1, hb_size.z+2], anchor=TOP+LEFT, spin=[180,90,0]);
-        
-        tag("keep") position(TOP) recolor("DarkSalmon") 23356BBA01_volcano_heater_block(anchor=TOP+LEFT, spin=[180,90,0]) {
-          tag("remove") attach("heater_front_hole") cylinder(d=3.2,h=hb_size.x*2);
-          tag("remove") attach("heater_back_hole") cylinder(d=3.2,h=hb_size.x*2);
+        tag("remove") down(-2 + z_offset) position(TOP+LEFT) cuboid([hb_size.x+4, hb_size.y+1, hb_size.z+.02], anchor=TOP+LEFT, spin=[180,90,0]);
+        tag("remove") down(-2 + z_offset) position(TOP+LEFT) cuboid([hb_size.x-4, hb_size.y+2, hb_size.z+1], anchor=TOP+LEFT, spin=[180,90,0]);
+        tag("remove") down(z_offset) position(TOP+LEFT) recolor("DarkSalmon") 23356BBA01_volcano_heater_block(anchor=BOTTOM+RIGHT, spin=[180,-90,0]) {
+          tag("remove") attach("heater_front_hole", CENTER) cylinder(d=3.2,h=hb_size.x*2);
+          tag("remove") attach("heater_back_hole", CENTER) cylinder(d=3.2,h=hb_size.x*2);
         }
       }
     }
@@ -45,5 +54,5 @@ module 23355BBA02_heater_block_mount(anchor, spin, orient) {
 //TESTS
 
 *23355BBA02_heater_block_mount() show_anchors();
-23355BBA02_heater_block_mount();
+23355BBA02_heater_block_mount() attach("heater_front_hole") recolor("red") cube(10);
 

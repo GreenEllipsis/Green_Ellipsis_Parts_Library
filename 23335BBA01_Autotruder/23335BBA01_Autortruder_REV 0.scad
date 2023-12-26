@@ -35,7 +35,7 @@ hide_tags ="frame 23269BBA03 power_supply 23345BBA01 23329BBA02 23340BBA10 23329
 //hide_tags = "frame power_supply "; 
 //hide_tags = "23329BBA01 23345BBA01";
 //hide_tags = "23345BBA01 23329BBA02";
-//hide_tags = "";
+hide_tags = "";
 
 /* [Dimensions] */
 frame_length = 400;
@@ -105,50 +105,6 @@ module frame(anchor, spin, orient) {
     }
 }
 
-
-module basic_mounting_plate(width=10, slot_length=90,slot_d=3, text, center, anchor, spin=0, orient=UP) {
-    slot_total_length = slot_length + slot_d;
-    txt = is_def(text) ? text : "";
-
-    anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
-    size = scalar_vec3([width,frame_width,thick_plate_t]);
-	anchors = [
-		named_anchor("hole_back_top", [0,vslot_distance/2,thick_plate_t/2], TOP, 0),
-		named_anchor("hole_front_top", [0,-vslot_distance/2,thick_plate_t/2], TOP, 0),
-		named_anchor("hole_back_bottom", [0,vslot_distance/2,-thick_plate_t/2], BOTTOM, 0),
-		named_anchor("hole_front_bottom", [0,-vslot_distance/2,-thick_plate_t/2], BOTTOM, 0),
-		named_anchor("slot_front_top", [0,slot_length/2,thick_plate_t/2], TOP, 0),
-        
-	];
-        
-    module shape() {
-        difference() {
-            union() {
-              // plate
-              linear_extrude(thick_plate_t, center=true) rect([width, frame_width], rounding = default_fillet);
-              // vslot tongue
-              yflip_copy() back(vslot_distance/2) down(thick_plate_t/2) vslot_tongue(offset=0.4, anchor=BOTTOM, orient=BOTTOM, spin=90);
-            }
-          
-            yflip_copy() back(vslot_distance/2) {
-              // vslot tap holes
-              cyl(d = M4_tap_hole_d, h = thick_plate_t+40 + 2*epsilon, anchor=CENTER);
-              // vslot counterbore holes
-              up(thick_plate_t/2+epsilon) cyl(d = M4_head_d, h = M4_head_d + 2*epsilon, anchor=TOP);
-            }
-            // power supply through-slot
-            linear_extrude(thick_plate_t+2*epsilon, center=true) rect([M3_through_hole_d, slot_total_length], rounding = M3_through_hole_d/2);
-            // part number
-            right(width*.5) down(thick_plate_t/2) rotate([0,180,-90]) linear_extrude(1, center=true) text(text=txt, size=M3_through_hole_d, halign="center", valign="top");        }
-        
-    }
-    
-    attachable(anchor,spin,orient, size=size, anchors=anchors) {
-        shape();
-        children();
-    }
-}
-
 // M3 slotted mounting bracket
 module part_23269BBA03(center, anchor="hole_front_bottom", spin=0, orient) {
   tag("23269BBA03") 
@@ -200,7 +156,7 @@ hide(hide_tags) color_this("DimGray") frame()
         23340BBA5C_doublegear48t(anchor=BOTTOM);
     } // gantry_wheel_2020
     // spool rod spacer on gear holder
-    attach("spool", TOP) color_this("D") tag("23340BBA7D")
+    attach("spool", TOP) color_this("Beige") tag("23340BBA7D")
       up(8) 23340BBA7D_spool_rod_spacer() {
       // spool gear on spool spacer
       attach(BOTTOM, BOTTOM) color_this("CadetBlue") tag("23355BBA6A") 
