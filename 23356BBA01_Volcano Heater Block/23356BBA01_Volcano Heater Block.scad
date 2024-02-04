@@ -19,6 +19,7 @@ module 23356BBA01_volcano_heater_block(anchor=CENTER, spin=0, orient=UP) {
   file="../23356BBA01_Volcano Heater Block/23356BBA01_Volcano Heater Block.stl";
   geom = 23356BBA01_volcano_heater_block_geom();
   size = _attach_geom_size(geom);
+  echo(geom[8]);
   attachable(anchor,spin,orient, size=size, anchors=geom[8]) {
     import(file);
     children();
@@ -27,7 +28,7 @@ module 23356BBA01_volcano_heater_block(anchor=CENTER, spin=0, orient=UP) {
 
 //TESTS
 *23356BBA01_volcano_heater_block() show_anchors();
-*23356BBA01_volcano_heater_block() ;
+23356BBA01_volcano_heater_block() ;
 * difference() {
 23356BBA01_volcano_heater_block() show_anchors();
   translate([0,0,-100]) cube(200);
