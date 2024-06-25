@@ -3,28 +3,41 @@
 // TODO add anchors for mounting heater block mounting holes
 include <../libs/BOSL2/std.scad>
 include <../libs/BOSL2/attachments_extras.scad>
-include <../libs/BOSL2/extrusion_vslot.scad>
+include <../libs/BOSL2/extrusion_angle.scad>
 include <../23356BBA01_Volcano Heater Block/23356BBA01_Volcano Heater Block.scad>
 
-function 23355BBA02_heater_block_mount_geom() =
+// h is thickness
+function 23356BBA02_heater_block_mount_geom(size, h) =
   let (
     nozzle_height = 30, // target height of centerline of nozzle above mounting rails
-    baseplate_t = 6, // thickness of mounting plate
-    nozzle_offset_up = 15.5, // distance from bottom of heater block to centerline of nozzle
-    z_offset = 6, // distance between top vslot and top of heater
     hb_geom = 23356BBA01_volcano_heater_block_geom(),
-    nozzle_offset_down = _attach_geom_size(hb_geom).x - nozzle_offset_up,
-    size = [20, 20, nozzle_height-baseplate_t+nozzle_offset_down+z_offset],
-    fa = _find_anchor("heater_front_hole", hb_geom),
-    ba = _find_anchor("heater_back_hole", hb_geom),
+    hb_size = _attach_geom_size(23356BBA01_volcano_heater_block_geom()), // heater_block_size
+    hb_fh_anchor = _find_anchor("heater_front_hole", hb_geom),
+    hb_bh_anchor = _find_anchor("heater_back_hole", hb_geom),
+    nozzle_anchor = _find_anchor("nozzle", hb_geom),
+    // nozzle_position relative to mount origin
+    nozzle_pos = [hb_size.z/2-nozzle_anchor[1][2]+h, nozzle_height, size.z] -size/2,
+    // hb_ft position relative to mount origin
+    hb_fh_pos = nozzle_pos + rot([-90,0,90],p=(hb_fh_anchor[1] - nozzle_anchor[1])),
+    hb_bh_pos = nozzle_pos + rot([-90,0,90],p=(hb_bh_anchor[1] - nozzle_anchor[1])),
     anchors = [
-      named_anchor("heater_front_mount", [size.x/2, fa[1].y, fa[1].z-z_offset],, RIGHT, 0),
-      named_anchor("heater_back_mount",  [size.x/2, ba[1].y, ba[1].z-z_offset],, RIGHT, 0)
+      named_anchor("hole1", [size.x/2, 0, size.z/4]-size/2, , FRONT, 0),
+      named_anchor("hole2", [size.x*3/4, 0, size.z*3/4]-size/2, , FRONT, 0),
+      named_anchor("hole3", [size.x/4, 0, size.z*3/4]-size/2, , FRONT, 0),
+      named_anchor("hb_fh", hb_fh_pos, , LEFT, 0),
+      named_anchor("hb_bh", hb_bh_pos, , LEFT, 0),
     ]
   )
-  attachable_geom(size=size, anchors=anchors);
+  attachable_geom(size=size, anchors=anchors); 
+//  attachable_geom(size=size); 
 
-module 23355BBA02_heater_block_mount(anchor, spin, orient) {
+module 23356BBA02_heater_block_mount(anchor, spin, orient) {
+  /* [Dimensions of angle extrusion] */
+  height=20;
+  width=1.5*25.4;
+  thickness=1/16*25.4;
+  /* [Autotruder Dimensions] */
+  nozzle_height = 30; // target height of nozzle above base
   /* [Rendering] */
   preview_fa = 12;
   preview_fs = 5;
@@ -32,33 +45,43 @@ module 23355BBA02_heater_block_mount(anchor, spin, orient) {
   render_fs = 0.4;
   $fa = $preview ? preview_fa : render_fa;
   $fs = $preview ? preview_fs : render_fs;
-  geom = 23355BBA02_heater_block_mount_geom();
+  
+  // part geometry
+  geom = 23356BBA02_heater_block_mount_geom(size=[width, width, height], h=thickness);
   size = _attach_geom_size(geom);
-  echo(str("23355BBA02_heater_block_mount size=",size));
-  hb_size = _attach_geom_size(23356BBA01_volcano_heater_block_geom()); // heater_block_size
-  z_offset = 6;
+  // [ANCHOR, POS, VEC, ANG]
+  hole1 = _find_anchor("hole1", geom);
+  hole2 = _find_anchor("hole2", geom);
+  hole3 = _find_anchor("hole3", geom);
+  hb_fh = _find_anchor("hb_fh", geom);
+  hb_bh = _find_anchor("hb_bh", geom);
 
   module shape() {
+    mounting_hole_d = 4.3;
+    hb_hole_d = 3.2;
     render(convexity = 1) 
-    diff() {
-      // v-slot extrusion
-      recolor("Green") extrusion_vslot(profile=size.x, height=size.z, anchor=CENTER) {
-        // cut-outs for heater block
-        tag("remove") down(-2 + z_offset) position(TOP+LEFT) cuboid([hb_size.x+4, hb_size.y+1, hb_size.z+.02], anchor=TOP+LEFT, spin=[180,90,0]);
-        tag("remove") down(-2 + z_offset) position(TOP+LEFT) cuboid([hb_size.x-4, hb_size.y+2, hb_size.z+1], anchor=TOP+LEFT, spin=[180,90,0]);
-        // use heater block to align and cut mounting holes for the heater block
-        tag("remove") down(z_offset) position(TOP+LEFT) recolor("DarkSalmon") 23356BBA01_volcano_heater_block(anchor=BOTTOM+RIGHT, spin=[180,-90,0]) { 
-          tag("remove") attach("heater_front_hole", CENTER) cyl(d=3.2,h=hb_size.x*2);
-          tag("remove") attach("heater_back_hole", CENTER) cylinder(d=3.2,h=hb_size.x*2);
+    difference() {
+      // angle extrusion
+      recolor("Green") extrusion_angle(height=height, width=width, thickness=thickness, anchor=CENTER);
+     // {
+        // attach and use the heater block to align and cut mounting holes for the heater block
+//        tag("removeX") translate([hb_size.z/2-nozzle_anchor[1][2]+thickness, nozzle_height, 0]) position(LEFT+FRONT+TOP) recolor("DarkSalmon") 23356BBA01_volcano_heater_block(anchor="nozzle", orient=BACK, spin=[0,-90,0]) { 
+//          tag("removeX") attach("heater_front_hole", CENTER) cyl(d=3.2,h=hb_size.x*2);
+//          tag("removeX") attach("heater_back_hole", CENTER) cyl(d=3.2,h=hb_size.x*2);
           //show_anchors(); // DEBUG
-        }
+    //    }
         // heater block for debugging
         //tag("keep") down(z_offset) position(TOP+LEFT) recolor("DarkSalmon") 23356BBA01_volcano_heater_block(anchor=BOTTOM+RIGHT, spin=[180,-90,0]); 
-      }
+      //}
+      translate(hole1[1]) rotate([90,0,0]) cylinder(d=mounting_hole_d,h=thickness*3, center=true);
+      translate(hole2[1]) rotate([90,0,0]) cylinder(d=mounting_hole_d,h=thickness*3, center=true);
+      translate(hole3[1]) rotate([90,0,0]) cylinder(d=mounting_hole_d,h=thickness*3, center=true);
+      translate(hb_fh[1]) rotate([0,90,0]) cylinder(d=hb_hole_d,h=thickness*3, center=true);
+      translate(hb_bh[1]) rotate([0,90,0]) cylinder(d=hb_hole_d,h=thickness*3, center=true);
     }
     
     // find the location of the heater_front_hole by introspection, so we can create an anchor on our part near the same location
-    anchors = "heater_front_hole";
+    //anchors = "heater_front_hole";
 //    echo(block_geom=block_geom, anchors=anchors);
 //    for ($idx = idx(anchors)) {
 //        anchr = anchors[$idx];
@@ -85,10 +108,4 @@ module 23355BBA02_heater_block_mount(anchor, spin, orient) {
     children();
   }
 }
-
-//TESTS
-
-*23355BBA02_heater_block_mount() show_anchors();
-23355BBA02_heater_block_mount();
-*23355BBA02_heater_block_mount() attach("heater_front_hole") recolor("red") cube(10);
 

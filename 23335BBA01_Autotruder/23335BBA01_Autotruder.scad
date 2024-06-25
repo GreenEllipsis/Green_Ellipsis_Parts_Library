@@ -3,9 +3,10 @@
 // Autotruder REV 0
 
 include <../libs/BOSL2/std.scad>
-include <../libs/BOSL2/extrusion_vslot.scad>
-include <../libs/BOSL2/power_supply.scad>
 include <../libs/BOSL2/attachments_extras.scad>
+include <../libs/BOSL2/extrusion_vslot.scad>
+include <../libs/BOSL2/mounting_plate.scad>
+include <../libs/BOSL2/power_supply.scad>
 // if we "use" these, we can't recolor() or hide them:
 include <../23344BBA5B_Autotruder Rightward Spool and Gear Holder/23344BBA5B Autotruder Rightward Spool and Gear Holder.scad>
 include <../23352BBA5D_Small Gear/23352BBA5D_Small Gear.scad>
@@ -22,7 +23,7 @@ include <../23355BBA6A_Spool Gear Rightward/23355BBA6A_Spool Gear Rightward.scad
 include <../23355BBA6B_Spool Core/23355BBA6B_Spool Core.scad>
 include <../23355BBA6C_Spool End Cap Removable/23355BBA6C_Spool End Cap Removable.scad>
 include <../23340BBA7D_Spool Rod Spacer/23340BBA7D_Spool Rod Spacer.scad>
-
+include <../240201BBA00_Volcano Heater Block Mounting Plate/240201BBA00_Volcano Heater Block Mounting Plate.scad>
 
 
 /* [Hole Sizes] */
@@ -82,8 +83,57 @@ module frame(size, v_profile, anchor, spin, orient) {
   }
 }
 
-// M3 slotted mounting bracket
-module part_23269BBA03(center, anchor="hole_front_bottom", spin=0, orient) {
+// TODO use standard mounting_plate instead
+module basic_mounting_plate(width=10, slot_length=90,vslot_distance=110, slot_d=3, text, center, anchor, spin=0, orient=UP) {
+    slot_total_length = slot_length + slot_d;
+    txt = is_def(text) ? text : "";
+
+    anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
+    size = scalar_vec3([width,frame_width,thick_plate_t]);
+	anchors = [
+		named_anchor("hole_back_top", [0,vslot_distance/2,thick_plate_t/2], TOP, 0),
+		named_anchor("hole_front_top", [0,-vslot_distance/2,thick_plate_t/2], TOP, 0),
+		named_anchor("hole_back_bottom", [0,vslot_distance/2,-thick_plate_t/2], BOTTOM, 0),
+		named_anchor("hole_front_bottom", [0,-vslot_distance/2,-thick_plate_t/2], BOTTOM, 0),
+		named_anchor("slot_front_top", [0,slot_length/2,thick_plate_t/2], TOP, 0),
+
+	];
+
+    module shape() {
+        difference() {
+            union() {
+              // plate
+              linear_extrude(thick_plate_t, center=true) rect([width, frame_width], rounding = default_fillet);
+              // vslot tongue
+              yflip_copy() back(vslot_distance/2) down(thick_plate_t/2) vslot_tongue(offset=0.4, anchor=BOTTOM, orient=BOTTOM, spin=90);
+            }
+
+            yflip_copy() back(vslot_distance/2) {
+              // vslot tap holes
+              cyl(d = M4_tap_hole_d, h = thick_plate_t+40 + 2*epsilon, anchor=CENTER);
+              // vslot counterbore holes
+              up(thick_plate_t/2+epsilon) cyl(d = M4_head_d, h = M4_head_d + 2*epsilon, anchor=TOP);
+            }
+            // power supply through-slot
+            linear_extrude(thick_plate_t+2*epsilon, center=true) rect([M3_through_hole_d, slot_total_length], rounding = M3_through_hole_d/2);
+            // part number
+            right(width*.5) down(thick_plate_t/2) rotate([0,180,-90]) linear_extrude(1, center=true) text(text=txt, size=M3_through_hole_d, halign="center", valign="top");        }
+
+    }
+
+    attachable(anchor,spin,orient, size=size, anchors=anchors) {
+        shape();
+        children();
+    }
+}
+
+// M3 slotted mounting bracket for power supply
+module part_23269BBA03(power_supply, center, anchor="hole_front_bottom", spin=0, orient) {
+ // power supply parameters
+  ps = power_supply_model_params(power_supply);
+  assert(!is_undef(ps), str("unknown power supply '", power_supply, "'"));
+  hole_center_s = ps[4][1][1][0] - ps[4][0][1][0];
+
   tag("23269BBA03") 
   basic_mounting_plate(
     slot_length=hole_center_s, //+M3_through_hole_d, 
@@ -111,13 +161,13 @@ module 23335BBA01_Autotruder(
   /* [Dimensions] */
   slot_width = size.y - 20;
 
-  // power supply parameters
-  ps = power_supply_model_params(ps_model);
-  hole_center_s = ps[4][1][1][0] - ps[4][0][1][0];
-  ps_hole_back_s = ps[1].y - ps[4][3][1][1];
-
   // control_board TODO(?)
   
+  // power supply
+  ps = power_supply_model_params(power_supply);
+  assert(!is_undef(ps), str("unknown power supply '", power_supply, "'"));
+  ps_hole_back_s = ps[1].y - ps[4][3][1][1];
+
   // spool holder parameters
   sh_hole_y_offset = 4.4;
   shg_hole_y_offset = 3.2;
@@ -126,15 +176,17 @@ module 23335BBA01_Autotruder(
   hide(hide_tags) color_this("DimGray") frame(size, v_profile)
   {
   //  show_anchors();
+    // FRONT STUFF
     // handle
     position(LEFT+FRONT) color_this("Beige") tag("23340BBA10") 23340BBA10_handle(anchor=LEFT+BOTTOM,orient=FRONT);
+    // BOTTOM STUFF
     // first power supply mounting bracket attached to frame
-    attach("front_right_bottom")  right(ps_hole_back_s) color_this("DarkSeaGreen") tag("23269BBA03") part_23269BBA03() {
+    attach("front_right_bottom")  right(ps_hole_back_s) color_this("DarkSeaGreen") tag("23269BBA03") part_23269BBA03(power_supply=power_supply) {
         // power supply attached to first bracket
         attach("slot_front_top") color_this("Gainsboro") 
           tag("power_supply") power_supply_model(ps_model, spin=90 , anchor="hole3", orient=UP) {
             // second power supply mounting bracket attached to power supply
-            attach("hole0") color_this("DarkSeaGreen") part_23269BBA03(anchor="slot_front_top", orient=DOWN, spin=90);
+            attach("hole0") color_this("DarkSeaGreen") part_23269BBA03(power_supply=power_supply, anchor="slot_front_top", orient=DOWN, spin=90);
         }
     }
     // project box base attached to frame
@@ -144,10 +196,14 @@ module 23335BBA01_Autotruder(
       // pcb attached to base
       attach("p_right_front") color_this("DimGray") tag("23345BBA01") 23345BBA01_mks_robin_nano_v3_1_001_3d(anchor="left_front", spin=90);
     }
+    // TOP STUFF
+    // hot end
+    position("front_right_top") color_this("Beige") left(120)
+    240201BBA00_volcano_heater_block_mounting_plate(width=130, vslot_profile=20, t=6, anchor="hole_1", orient=BOTTOM);
     // spool holder attached to frame
-    position("front_right_top") color_this("Beige")23339BBA5A_autotruder_rightward_spool_holder(orient=FRONT, anchor="right_holes");
+    tag("23339BBA5A") position("front_right_top") color_this("Beige")23339BBA5A_autotruder_rightward_spool_holder(orient=FRONT, anchor="right_holes");
     // spool and gear holder attached to frame
-    position("back_right_top") color_this("Beige") 23344BBA5B_autotruder_rightward_spool_and_gear_holder(orient=FRONT, anchor="right_holes") {
+    tag("23344BBA5B") position("back_right_top") color_this("Beige") 23344BBA5B_autotruder_rightward_spool_and_gear_holder(orient=FRONT, anchor="right_holes") {
        // small gear on gear holder TODO mount motor
       attach("motor") color_this("CadetBlue") zrot(24) 
         23352BBA5D_small_gear(anchor=BOTTOM);

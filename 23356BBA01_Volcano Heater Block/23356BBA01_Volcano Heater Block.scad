@@ -1,6 +1,7 @@
 // a BOSL2 module
 include <../libs/BOSL2/std.scad>
 include <../libs/BOSL2/attachments_extras.scad>
+// See 23356BBA01_Volcano Heater Block examples.scad for examples
 
 function 23356BBA01_volcano_heater_block_geom() = 
   let(
@@ -24,12 +25,4 @@ module 23356BBA01_volcano_heater_block(anchor=CENTER, spin=0, orient=UP) {
     import(file);
     children();
   }
-}
-
-//TESTS
-*23356BBA01_volcano_heater_block() show_anchors();
-23356BBA01_volcano_heater_block() ;
-* difference() {
-23356BBA01_volcano_heater_block() show_anchors();
-  translate([0,0,-100]) cube(200);
 }

@@ -16,6 +16,7 @@ e=0.01;
 text="   Green Ellipsis  ";
 text_scale=2.7;
 text_radius=coin_d/5;
+scale=.07;
 
 // todo add recycling symbol
 // Utility functions
@@ -275,4 +276,4 @@ start_gap = gap/2+included_angle(r, arrow_w);
 //logo(false);
 
 // DXF
-logo(false);
+scale(scale) logo(false);
