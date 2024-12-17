@@ -1,0 +1,28 @@
+; manually home tool to top of bearing, ready to grind
+;go to 0
+G90 G0 Z0
+;spindle on
+M3
+G0Z-0.27 
+G4P30
+G0Z-0.30 
+G4P45
+G0Z-0.33 
+G4P45
+G0Z-0.36 
+G4P45
+G0Z-0.39 
+G4P45
+G0Z-0.42 
+G4P45
+G0Z-0.45 
+G4P45
+G0Z-0.48 
+G4P45
+G0Z-0.51 
+G4P45
+G0Z-0.54 
+G4P60000
+G0Z1
+M5 ;spindle off
+G0Z30 ; raise tool

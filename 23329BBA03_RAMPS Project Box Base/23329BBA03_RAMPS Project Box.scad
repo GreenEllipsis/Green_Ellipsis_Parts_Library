@@ -23,7 +23,7 @@ hole_top_center=[hole_top_left.x+50.8, 2.5+5.1+27.9];
 hole_bottom_center=[hole_top_center.x, 2.5+5.1];
 hole_bottom_left=[14, 2.5];
 hole_bottom_right=[hole_bottom_left.x+82.55, 2.5];
-hole_d = 3.2;
+hole_d = 2.6; // tap hole
 mega_offset=[0,8.08]; // offset to MEGA power connector corner from pcb bounding box
 standoff_screw_thread_exposed_length = 5.9;
 top_bottom_thickness = 1.2;
@@ -82,7 +82,7 @@ standoffHeight      = standoff_screw_thread_exposed_length-top_bottom_thickness;
 //pcbThickness        = 1.6; 
 //standoffHeight      = 1.0; //-- How much the PCB needs to be raised from the base to leave room for solderings and whatnot
 standoffDiameter    = 5.5;
-standoffPinDiameter = 2.6;
+standoffPinDiameter = hole_d;
 standoffHoleSlack   = 0.3; // TEST too tight?
 
 //===================================================================
@@ -130,7 +130,7 @@ paddingRight        = 2;
 paddingLeft         = 2;
 
 //-- Edit these parameters for your own box dimensions
-wallThickness       = 2.0;
+wallThickness       = 3.0;
 basePlaneThickness  = top_bottom_thickness;
 lidPlaneThickness   = top_bottom_thickness;
 
@@ -145,7 +145,7 @@ lidWallHeight       = pcbThickness-baseWallHeight+paddingRight*2+standoffHeight;
 
 //-- ridge where base and lid off box can overlap
 //-- Make sure this isn't less than lidWallHeight
-ridgeHeight         = 5.0;
+ridgeHeight         = max(wallThickness*1.8, 5.0);
 ridgeSlack          = 0.0; // our rPET hole profile adds it's own slack
 roundRadius         = 3.0;
 
@@ -452,13 +452,12 @@ $preview ? [ // from back, from bottom, width, height
 //-------------------------------------------------------------------
 snapJoins   =   
 [
-    [shellLength*1/8, 5, yappLeft, yappRight ],
-    [shellLength*2/8, 5, yappLeft, yappRight],
-    [shellLength*3/8, 5, yappLeft, yappRight],
-    [shellLength*4/8, 5, yappLeft, yappRight],
-    [shellLength*5/8, 5, yappLeft, yappRight],
-    [shellLength*6/8, 5, yappLeft, yappRight],
-    [shellLength*7/8, 5, yappLeft, yappRight],
+    [shellLength*0, 5, yappLeft, yappRight ],
+    [10+5, 5, yappLeft, yappRight],
+    [20+7.5, 5, yappLeft, yappRight],
+    [shellLength-25-7.5, 5, yappLeft, yappRight],
+    [shellLength-15-5, 5, yappLeft, yappRight],
+    [shellLength-5/2, 5, yappLeft, yappRight],
 ];
 
 //===================================================================

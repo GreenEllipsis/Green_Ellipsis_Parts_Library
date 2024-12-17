@@ -1,0 +1,4 @@
+rPET or PETg
+0.30 mm layer height
+3 top and bottom layers
+3 perimeters
