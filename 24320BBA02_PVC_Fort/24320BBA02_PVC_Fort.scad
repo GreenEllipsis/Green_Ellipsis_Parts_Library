@@ -1,15 +1,21 @@
 /* PVC Fort connectors
-based on 
+inspired by
 
-remodeled in OpenSCAD
+intended for 1/2-inch Schedule 40 PVC. Schedule 20 should work, too, but be less robust. Schedule 80 would be overkill.
 by Green Ellipsis, LLC. 
 (C) 2024 CC BY-NC 4.0
 */
+// TODO
+// add recycling symbol option
+
 //Pick a part number or change the mode
 part=30; // [0:39]
 //split connectors that won't print flat
 split=true; 
 mode="part"; // [part:single part, all:all the connectors, model:show the assembly]
+//Opacity of pipes in assembly
+pipe_alpha=0.3; //[0:0.05:1]
+
 /* [Hidden] */
 //connector
 base_d = 19/32*25.4+1; // inside diameter of pipe, basically
@@ -19,20 +25,22 @@ octo_s = base_d*(1+2/sqrt(2));
 standoff_s = 3.1*2;
 start_s = octo_s/2+standoff_s;
 end_s = base_d*1.3;
+echo(str("connector length=",(start_s+end_s)*2));
 // common connectors
 STRAIGHT=3;
 CORNER=14;
+ASTERISK=33;
 BASE9=34;
 BASE11=36;
+WHOVILLE=37;
 //screw stuff
-countersink_d1=6.5;
+countersink_d1=6.75;
 countersink_d2=3.0;
 countersink_h=3.5;
-through_hole_d=25.4*9/64;
+through_hole_d=25.4*11/64;
 pilot_hole_d=25.4*7/64;
 screw_s=start_s - countersink_d1*0.6;
 //pipe stuff
-pipe_alpha=0.3;
 c = start_s;
 c2 = start_s*2;
 p2 = 24*25.4; // 2 ft
@@ -299,15 +307,15 @@ module square1() {
   up(c) right(u1) pipe1();
   right(u1) part(BASE11);
 }
-module square2() {
-  part(BASE11);
+module square2(connector=BASE11) {
+  rotate([90,0]) part(connector);
   right(c) rotate([0,90,0]) pipe2();
   up(c) pipe2();
-  up(u2) rotate([90,0,90]) part(BASE11);
+  up(u2) rotate([90,0,0]) part(connector);
   up(u2) right(c) rotate([0,90,0]) pipe2();
-  up(u2) right(u2) rotate([90,0]) part(BASE11);
+  up(u2) right(u2) rotate([90,0]) part(connector);
   up(c) right(u2) pipe2();
-  right(u2) part(BASE11);
+  right(u2) rotate([90,0]) part(connector);
 }
 
 
@@ -332,50 +340,54 @@ module grid1() {
   diag1();
 }
 
-module grid2() {
-  square2();
+module grid2(connector=BASE11) {
+  square2(connector);
   diag2();
 }
 
 // just playing with putting the pieces together
 module model() {
-  grid2();
-  translate([u2,u2]) rotate(180) grid2();
-  // two 1=foot pipes
-  back(c) {
-    rotate([-90,0]) pipe1();
-    back(p1+c) {
-      rotate(90) part(STRAIGHT);
-      back(c) rotate([-90,0]) pipe1();
-    }
-  }
-  back(c) up(u2) rotate([-90,0]) pipe2();
-  // u2 diagonal made from 1-foot pipes
-  diag([0,c,c]) {
-    rotate([45,0]) 
-    {
-      rotate([-90,0]) pipe1();
-      back(p1+c) {
-        rotate([0,0,90]) part(STRAIGHT);
-        back(c) {
-          rotate([-90,0]) pipe1();
-          back(p1+c) {
-            rotate([0,0,90]) part(STRAIGHT);
-            back(c) rotate([-90,0]) pipe2d();
-          }
-          
-        }
-      }
-    }
-  }
-    
-  right(u2) rotate(90) grid1();
+  // 2 ft square
+//  grid2(ASTERISK);
+  grid1();
+//  translate([u2,u2]) rotate(180) grid2();
+//  // two 1=foot pipes
+//  back(c) {
+//    rotate([-90,0]) pipe1();
+//    back(p1+c) {
+//      rotate(90) part(STRAIGHT);
+//      back(c) rotate([-90,0]) pipe1();
+//    }
+//  }
+//  back(c) up(u2) rotate([-90,0]) pipe2();
+//  // u2 diagonal made from 1-foot pipes
+//  diag([0,c,c]) {
+//    rotate([45,0]) 
+//    {
+//      rotate([-90,0]) pipe1();
+//      back(p1+c) {
+//        rotate([0,0,90]) part(STRAIGHT);
+//        back(c) {
+//          rotate([-90,0]) pipe1();
+//          back(p1+c) {
+//            rotate([0,0,90]) part(STRAIGHT);
+//            back(c) rotate([-90,0]) pipe2d();
+//          }
+//          
+//        }
+//      }
+//    }
+//  }
+//    
+//  right(u2) rotate(90) grid1();
 }
 
+columns=7;
+spacing=1.1;
 if (mode=="all") {
-  dy = (c+end_s)*2*1.1 * (split ? 2 : 1);
+  dy = (c+end_s)*2*spacing * (split ? 2 : 1);
   for (part=[0:len(parts)-1]) {
-    right(((c+end_s)*2*1.1)*(part%7)) back(dy*floor(part/7)) part(part);
+    right(((c+end_s)*2*1.1)*(part%columns)) back(dy*floor(part/columns)) part(part);
   }
 } else if (mode=="model") {
   model();
