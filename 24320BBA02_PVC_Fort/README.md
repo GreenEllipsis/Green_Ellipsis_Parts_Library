@@ -10,14 +10,15 @@ Filament
 =========
 PLA is probably too brittle.
 PETG works for connectors that don't have vertical pins. For those, it's too brittle. 
-ABS or ASA work for all connectors.
+ABS or ASA work better, but still too brittle for 2-foot PVC.
+Shore 90+ TPU is almost rigid enough at 4 perimeters and 50% cubic infill and gussets. Will try 100% infill at the interface at the base of the pin where 90% of the bending happens.
 
 Recommended Print Settings
 ===============
 For a 0.4 or 0.5 mm nozzle:
 + 4 permimeters
-+ 3 top and bottom layers
-+ 10% cubic infill
++ 3 top and bottom layers (TPU 5 layers)
++ 10% cubic infill (TPU 50%)
 
 For connectors that have vertical pins on top and bottom, the models are printed in halves and joined with #6 x 1/2" wood screws.
 

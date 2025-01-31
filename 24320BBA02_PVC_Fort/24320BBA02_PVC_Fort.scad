@@ -5,14 +5,34 @@ intended for 1/2-inch Schedule 40 PVC. Schedule 20 should work, too, but be less
 by Green Ellipsis, LLC. 
 (C) 2024 CC BY-NC 4.0
 */
+
+/* 
+Version 1.1.1
+==============
+no hole below a diagonal
+
+
+Version 1.1.0
+==============
+* Added optional gussets to add stiffness when printing with TPU
+*/
 // TODO
 // add recycling symbol option
 
+// different printing modes
+mode="part"; // [part:single part, all:all the connectors, model:show the assembly, modifier:a slicer mask to modify the pin base]
 //Pick a part number or change the mode
-part=30; // [0:39]
+part=30; // [0:40]
 //split connectors that won't print flat
 split=true; 
-mode="part"; // [part:single part, all:all the connectors, model:show the assembly]
+//slit in end of pin
+end_slit=true;
+// gusset add stiffness when printing with flexible filaments
+gussets=false;
+// modify diameter of vertical pins by this % to compensate for printing variation
+vertical_scale_percent=100.0;
+// modify diameter of vertical diagonal pins by this % to compensate for printing variation
+diagonal_scale_percent=100.0;
 //Opacity of pipes in assembly
 pipe_alpha=0.3; //[0:0.05:1]
 
@@ -50,6 +70,7 @@ u2=c+p2+c; // base unit length
 p1d = u1*sqrt(2) - u1 - c2;
 p2d = (u2)*sqrt(2) - u2 - c2;
 
+//[ +x, +y, -x, -y, +z, -z, +x+y, -x+y, -x-y, +x-y, +x+z,-x+z, +y+z,-y+z]
 parts = [ // 1st 6 are where to put the end, last is how many axes for the middle part
 // two-connector variations 
   [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], // 45 
@@ -99,27 +120,29 @@ parts = [ // 1st 6 are where to put the end, last is how many axes for the middl
   [1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0], // 90,90xy,90xy,45xy,90xz
   [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0], // 90,90xy,90xy,90xz,45xz -32
 // eight connector variations
-  [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0], // all xy
+  [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0], // all xy -33
 // nine connector variations
-  [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0], // all xy
+  [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0], // all xy -34
 // ten connector variations
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], // 
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], // -35
 // elevent-connector variations
-  [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1], // 
+  [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1], // -36
 // twelve connector variations
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // -37
 
 
-  [1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0], // Fan
-  [1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0], // Test
+  [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1], // -38
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // kitchen sink
+  [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1], // neighbors for +y
   ];
+  
 z_v = [0,0,0];
 y_v = [-90,0,0];
 x_v = [90,0,90];
 slit=base_d*0.05;
 knob_d=hex_s*0.9;
-$fs = $preview ? 4 : 0.4;
-$fa = $preview ? 10 : 2;
+$fs = $preview ? 4 : 1;
+$fa = $preview ? 10 : 4;
 
 // part lengths
 echo(str("connector thickness = ", hex_s, " mm"));
@@ -134,6 +157,57 @@ function splittable(part) = split && part[5];
 
 // determine if part should have a through hole
 function piercable(part) = !part[4] && !part[5];
+
+module modifier(part) {
+  modifier_s=18;
+  modifier_offset=2;
+  data=parts[part];
+  echo(data=data);
+  cube_s=2*(start_s + modifier_s);
+
+  module add() {
+    for(pin=[0:len(data)]) {
+      if (data[pin]) {
+        // x-y plane
+        if (data[0]) base();
+        if (data[1]) rotate(90) base();
+        if (data[2]) rotate(180) base();
+        if (data[3]) rotate(270) base();
+        if (data[4]) rotate([0,270,0]) base("vertical"); //+z
+        if (data[5]) rotate([0,90,0]) base("vertical"); //-z
+        if (data[6]) rotate(360/8) base(); //+x+y
+        if (data[7]) rotate(360/8*3) base(); //-x+y
+        if (data[8]) rotate(180+360/8) base();//-x-y
+        if (data[9]) rotate(180+360/8*3) base(); //+x-y
+        if (data[10]) rotate([0,-45,0]) base("diagonal"); //+x+z
+        if (data[11]) rotate([0,-135,0]) base("diagonal"); //-x+z
+        if (data[12]) rotate([45,0,0]) rotate(90) base("diagonal"); //+y+z
+        if (data[13]) rotate([135,0,0]) rotate(90) base("diagonal"); //-y+z
+      }
+    }  
+  }
+  
+  module base(orientation="") {
+    rescale(orientation) translate([start_s-modifier_offset, 0]) cube([modifier_s, hex_s*sqrt(2), hex_s*sqrt(2)], center=true);
+  }
+  
+  if (splittable(data)) {
+    //top half
+    difference() {
+      add();
+      translate([0,0,-cube_s/2]) cube(cube_s, center=true);
+    }
+    // bottom half
+    translate([0, (start_s+end_s)*2.1]) rotate([180,0,0]) difference() {
+      add();
+      translate([0,0,cube_s/2]) cube(cube_s, center=true);
+    }
+  } else {
+    add();
+  }
+  children();
+
+}
 
 module part(part) {
   data = parts[part];
@@ -151,17 +225,26 @@ module part(part) {
       translate([0,0,start_s/5+knob_d*0.3]) sphere(d=knob_d);
    }
     end(data, pipe=false);
+    if (gussets) gusset(data);
   }
   
   module subtract() {
     // hole through middle
     if (piercable(data)) cylinder(h=(start_s+end_s)*3, d=hex_s*0.4, center=true);
     if (splittable(data)) { // add screw holes
-      for (angle=[360/8:360/8:360]) {
-        rotate(angle) translate([screw_s,0,0]) {
-          cylinder(h=hex_s+0.02, d=pilot_hole_d, center=true); // pilot hole
-          cylinder(h=hex_s/2+0.01, d=through_hole_d); // through hole
-          translate([0,0,hex_s/2-countersink_h]) cylinder(h=countersink_h+0.01, d1=countersink_d2, d2=countersink_d1); // through hole
+      for (i=[0:7]) {
+        if (!(
+            (i==0 && data[10]) ||
+            (i==2 && data[12]) ||
+            (i==4 && data[11]) ||
+            (i==6 && data[13])
+        )) {
+          angle=i*45;
+          rotate(angle) translate([screw_s,0,0]) {
+            cylinder(h=hex_s+0.02, d=pilot_hole_d, center=true); // pilot hole
+            cylinder(h=hex_s/2+0.01, d=through_hole_d); // through hole
+            translate([0,0,hex_s/2-countersink_h]) cylinder(h=countersink_h+0.01, d1=countersink_d2, d2=countersink_d1); // through hole
+          }
         }
       }
     }
@@ -193,19 +276,23 @@ module part(part) {
   children();
 }
 
+// TODO refactor this so all the rotations happen here, and not partly here
+// and partly in end_add. See gusset() for example.
 module end(part, pipe=false) { 
   if (part[0]) end_add(x_v, pipe);
   if (part[1]) rotate(90) end_add(x_v, pipe);
   if (part[2]) rotate(180)  end_add(x_v, pipe);
   if (part[3]) rotate(270) end_add(x_v, pipe);
-  if (part[4]) rotate(90) end_add(z_v, pipe);
-  if (part[5]) rotate([180,0,90]) end_add(z_v, pipe);
+  if (part[4]) rotate(90) end_add(z_v, pipe, "vertical");
+  if (part[5]) rotate([180,0,90]) end_add(z_v, pipe, "vertical");
   if (part[6]) rotate(360/8) end_add(x_v, pipe);
   if (part[7]) rotate(360/8*3) end_add(x_v, pipe);
   if (part[8]) rotate(180+360/8) end_add(x_v, pipe);
   if (part[9]) rotate(180+360/8) end_add(y_v, pipe);
-  if (part[10]) rotate([0,-360/8]) end_add(x_v, pipe);
-  if (part[11]) rotate([0,-360/8*3]) end_add(-x_v, pipe);
+  if (part[10]) rotate([0,-360/8]) end_add(x_v, pipe, "diagonal");
+  if (part[11]) rotate([0,-360/8*3]) end_add(-x_v, pipe, "diagonal");
+  if (!is_undef(part[12]) && part[12]) rotate([0,-360/8*3,270]) end_add(-x_v, pipe, "diagonal");
+  if (!is_undef(part[13]) && part[13]) rotate([0,-360/8*3,90]) end_add(-x_v, pipe, "diagonal");
 }
 
 module base(dz,h) {
@@ -216,7 +303,7 @@ module base(dz,h) {
   }
 }
 
-module end_add(v, pipe) {
+module end_add(v, pipe, orientation="horizontal") {
   end1 = end_s * 0.9;
   end2 = end_s * 0.1;
   sphere_r = (base_d-hex_s)/2;
@@ -233,7 +320,6 @@ module end_add(v, pipe) {
       }
       translate([0, 0, start_s+ring_s]) cylinder(h=end1-ring_s, d=base_d, $fn=6);
     }
-////    %cylinder(h=end1, d=base_d, $fn=32);
     translate([0,0,start_s+end1]) cylinder(h=end2, d1=base_d, d2=base_d-end2, $fn=6);
       //detents
     rotate(30) translate([hex_s/2,0, start_s+end1-sphere_r]) sphere(r=sphere_r);
@@ -242,10 +328,12 @@ module end_add(v, pipe) {
   
   module subtract() {
     slit_s = end_s*0.9;
-    translate([0,0,slit_s/2+(end_s-slit_s)+start_s+00.1]) cube([slit, base_d, slit_s], center=true);
+    if (end_slit) {
+      translate([0,0,slit_s/2+(end_s-slit_s)+start_s+00.1]) cube([slit, base_d, slit_s], center=true);
+    }
   }
   
-  rotate(v) difference() {
+  rotate(v) rescale(orientation) difference() {
     add();
     subtract();
     %if (pipe) translate([0,0,start_s]) pipe(25);
@@ -253,6 +341,60 @@ module end_add(v, pipe) {
   
 }
 
+//[ +x, +y, -x, -y, +z, -z, +x+y, -x+y, -x-y, +x-y, +x+z,-x+z, +y+z,-y+z]
+module gusset(data) {
+  octo_side=octo_s/(1+2*sqrt(2));
+  for(pin=[0:len(data)]) {
+    if (data[pin]) {
+      // x-y plane
+      hull() {
+        if (data[0]) base();
+        if (data[1]) rotate(90) base();
+        if (data[2]) rotate(180) base();
+        if (data[3]) rotate(270) base();
+        if (data[6]) rotate(360/8) base(); //+x+y
+        if (data[7]) rotate(360/8*3) base(); //-x+y
+        if (data[8]) rotate(180+360/8) base();//-x-y
+        if (data[9]) rotate(180+360/8*3) base(); //+x-y
+      }
+      hull() { // x-z plane
+        if (data[0]) base();
+        if (data[2]) rotate(180) base();
+        if (data[4]) rotate([0,270,0]) base(); //+z
+        if (data[5]) rotate([0,90,0]) base(); //-z
+        if (data[10]) rotate([0,-45,0]) base(); //+x+z
+        if (data[11]) rotate([0,-135,0]) base(); //-x+z
+      }
+      hull() { // y-z plane
+        if (data[1]) rotate(90) base();
+        if (data[3]) rotate(270) base();
+        if (data[4]) rotate([0,270,0]) base(); //+z
+        if (data[5]) rotate([0,90,0]) base(); //-z
+        if (data[12]) rotate([45,0,0]) rotate(90) base(); //+y+z
+        if (data[13]) rotate([135,0,0]) rotate(90) base(); //-y+z
+      }
+    }
+  }
+  base();
+  
+  module base() {
+    translate([start_s/2, 0]) cube([start_s, hex_s, hex_s], center=true);
+  }
+}
+
+
+module rescale(orientation) {
+  if (orientation=="diagonal") {
+    scale([diagonal_scale_percent/100, diagonal_scale_percent/100, 1]) children();
+  } else if (orientation=="vertical") {
+    scale([vertical_scale_percent/100, vertical_scale_percent/100, 1]) children();
+  } else {
+    children();
+  }
+}
+    
+
+///////////// PIPE stuff ///////////////////////
 module pipe(length, center=false) {
   id = 15.06;
   od = 21.28;
@@ -391,7 +533,10 @@ if (mode=="all") {
   }
 } else if (mode=="model") {
   model();
+} else if (mode=="modifier") {
+  echo("modifier");
+  *%part(part);
+  modifier(part);
 } else {
   part(part);
 }
-    

@@ -1,0 +1,13 @@
+{
+    "parameterSets": {
+        "Becky Indyx": {
+            "depth": "13",
+            "height": "24",
+            "taper_percent": "11",
+            "thickness": "1.2",
+            "tip_percent": "25",
+            "width": "16"
+        }
+    },
+    "fileFormatVersion": "1"
+}
